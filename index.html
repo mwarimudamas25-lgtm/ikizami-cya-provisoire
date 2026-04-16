@@ -14,9 +14,12 @@
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
   min-height: 100vh;
-  background-color: #e5e5e5;
+  background-color: #fff;
 
+  /* 🔥 FIX SCROLL */
+  overflow: hidden;
   font-family: 'Inter', sans-serif;
   font-size: 20px;
 
@@ -24,30 +27,6 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* =========================
-   PHONE WRAPPER
-========================= */
-.phone-wrapper {
-  display: flex;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 10px;
-}
-
-.phone-screen {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  min-height: 100vh;
-
-  border-radius: 16px;
-
-  overflow-y: auto;   /* ✅ allow vertical scroll */
-  overflow-x: hidden;
-
-  box-shadow: 0 0 20px rgba(0,0,0,0.15);
-}
- 
 /* =========================
    MAIN MENU (PARENT)
 ========================= */
@@ -82,7 +61,7 @@ html, body {
   word-break: break-word;   /* Prevent cut */
   overflow-wrap: break-word;
 
-  font-size: 20px;          /* Adjust if too big */
+  font-size: 22px;          /* Adjust if too big */
   line-height: 1.3;
 }
 
@@ -269,29 +248,6 @@ box-sizing: border-box;
   }
 }
 
-
-.quiz-history-button {
-  display: block;
-  width: 100%;
-  max-width: 340px;
-  margin: 10px auto 20px auto;
-  padding: 10px;
-
-  background: linear-gradient(135deg, #17a2b8, #117a8b);
-  color: white;
-
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-.quiz-history-button:hover {
-  background: linear-gradient(135deg, #117a8b, #0b5c66);
-}
-
 .home-button {
       background-color: gray;
       color: white;
@@ -343,11 +299,9 @@ box-sizing: border-box;
 }
 
 #pauseBtn {
-  display: inline-block;
-  margin: 8px 0 12px;
-  padding: 8px 14px;   /* 🔥 slightly bigger for mobile */
+  margin: 10px 0;
+  padding: 6px 12px;
   font-size: 14px;
-
   border: none;
   border-radius: 6px;
   background: #1F2A7A;
@@ -660,18 +614,21 @@ form textarea {
   justify-content: space-between; /* or center */
 }
  
+
+#google_translate_element {
+  text-align: center;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
   </style>
 </head>
 
-<body oncontextmenu="return false" onkeydown="return disableKeys(event)">
-<!-- ================= PHONE WRAPPER ================= -->
-<div class="phone-wrapper">
 
-  <div class="phone-screen">
+<body oncontextmenu="return false" onkeydown="return disableKeys(event)">
 <!-- ================= MAIN MENU ================= -->
 
 <div id="mainMenu">
-
+<div id="google_translate_element" style="margin:5px;"></div>
   <h2>Hitamo Icyiciro cy'Ibizami</h2>
   <h2>Ikizami Cya Mbere ni Ubuntu</h2>
 
@@ -698,6 +655,7 @@ form textarea {
 <div id="quiz-container" class="quiz-container" style="display:none;">
 <h3 id="quizTitle">Ikizami No.</h3>
   <div id="timer"></div>
+<button id="pauseBtn" style="display:none;">⏸ Pause</button>
 <div
   id="quizTime"
   style="font-weight:bold; margin-top:4px; color:#006400; font-size: 1.1rem;"
@@ -833,9 +791,8 @@ Ikizamini kigizwe n'ibibazo 20, buri kibazo gifite inota 1, kikamara iminota 20.
   Sohoka ujye ku kindi kizami
 </button>
 
- </div>
 </div>
-</div>
+
 
 <!-- ================= JS ================= -->
 <script>
@@ -883,10 +840,9 @@ function generateQuizButtons(category, containerId) {
   container.innerHTML = "";
 
   container.classList.add("quiz-buttons");
-
   setTimeout(() => {
-    highlightActiveQuizButton();
-  }, 50);
+  highlightActiveQuizButton();
+}, 50);
 
   const homeBtn = document.createElement("button");
   homeBtn.className = "quiz-home-button";
@@ -907,20 +863,8 @@ function generateQuizButtons(category, containerId) {
   const title = document.createElement("h3");
   title.textContent = "Ibizami (" + categoryLabel + ")";
 
-  /* =========================
-     🔥 HISTORY BUTTON (NEW)
-  ========================= */
-  const historyBtn = document.createElement("button");
-  historyBtn.className = "quiz-history-button";
-  historyBtn.textContent = "📊 Reba amanota yawe";
-  historyBtn.onclick = () => showQuizHistory(category);
-
-  /* =========================
-     APPEND TOP ELEMENTS
-  ========================= */
   container.appendChild(homeBtn);
   container.appendChild(title);
-  container.appendChild(historyBtn); // 🔥 NEW (safe position)
 
   const total = QUIZ_LIMITS[category] || 0;
 
@@ -1094,7 +1038,7 @@ const QUIZ_LIMITS = {
   twoWeeks: 15,
   month: 30
 };
-const QUIZ_VERSION = "1.7";
+const QUIZ_VERSION = "1.5";
 const CODE_VALIDITY = {
   week: 7 * 24 * 60 * 60 * 1000,      // 7 days
   twoWeeks: 14 * 24 * 60 * 60 * 1000, // 14 days
@@ -3751,41 +3695,9 @@ function loadQuestions(quizNumber) {
   });
 
   container.innerHTML = output;
-/* 🔥 RESTORE ANSWERS */
-const saved = sessionStorage.getItem(
-  `${category}_quiz${quizNumber}_answers`
-);
-
-if (saved) {
-
-  try {
-    userAnswers = JSON.parse(saved);
-
-    userAnswers.forEach((ans, i) => {
-
-      if (ans === null || ans === undefined) return;
-
-      const radio = document.querySelector(
-        `input[name="q_${i}"][value="${ans}"]`
-      );
-
-      if (radio) {
-        radio.checked = true;
-
-        /* 🔥 SHOW COLORS */
-        applyAnswerStyles(i, ans);
-      }
-
-    });
-
-  } catch (e) {
-    console.warn("⚠️ Restore failed", e);
-  }
-}
 
   console.log("✅ Questions loaded successfully!");
 }
-
 
 function selectAnswer(qIndex, optIndex) {
 
@@ -3794,62 +3706,33 @@ function selectAnswer(qIndex, optIndex) {
 
   if (!Array.isArray(userAnswers)) return;
 
-  /* 🔥 GET OLD VALUE FIRST */
-  const oldValue = userAnswers[qIndex];
-
-  /* 🔥 CHECK IF ALREADY ANSWERED */
-  if (oldValue !== null && oldValue !== optIndex) {
-
-    const confirmChange = confirm(
-      "Iki kibazo wari wagisubije. Ese ushaka guhitamo ikindi gisubizo?\n\nOK = Yego\nCancel = Oya"
-    );
-
-    if (!confirmChange) {
-
-      /* 🔙 SUBIRA KU OLD ANSWER */
-      const oldRadio = document.querySelector(
-        `input[name="q_${qIndex}"][value="${oldValue}"]`
-      );
-
-      if (oldRadio) oldRadio.checked = true;
-
-      return;
-    }
-  }
-
-  /* =========================
-     ✅ NOW UPDATE ANSWER
-  ========================= */
   userAnswers[qIndex] = optIndex;
 
-  /* 🔥 AUTO SAVE */
-  sessionStorage.setItem(
-    `${currentCategory}_quiz${currentQuiz}_answers`,
-    JSON.stringify(userAnswers)
-  );
-
-  /* 🔥 SHOW COLORS */
-  applyAnswerStyles(qIndex, optIndex);
-
   const container = document.getElementById("quiz-container");
+
   if (!container) return;
 
-  const questions = container.querySelectorAll(".question");
+  const questions =
+    container.querySelectorAll(".question");
 
   /* =========================
      LAST QUESTION
   ========================= */
+
   if (qIndex === questions.length - 1) {
 
     setTimeout(() => {
 
-      const submitBtn = document.getElementById("submit");
+      const submitBtn =
+        document.getElementById("submit");
 
       if (submitBtn) {
+
         submitBtn.scrollIntoView({
           behavior: "smooth",
           block: "center"
         });
+
       }
 
     }, 300);
@@ -3862,6 +3745,7 @@ function selectAnswer(qIndex, optIndex) {
   ========================= */
 
   const nextQuestion = questions[qIndex + 1];
+
   if (!nextQuestion) return;
 
   setTimeout(() => {
@@ -3881,52 +3765,21 @@ function selectAnswer(qIndex, optIndex) {
   }, 250);
 }
 
-function applyAnswerStyles(qIndex, selectedIndex) {
-
-  const options = document.querySelectorAll(
-    `[id^="q_${qIndex}_"]`
-  );
-
-  options.forEach((opt, j) => {
-
-    opt.classList.remove("correct", "wrong");
-
-    if (j === correctAnswers[qIndex]) {
-      opt.classList.add("correct");
-    }
-
-    if (j === selectedIndex && j !== correctAnswers[qIndex]) {
-      opt.classList.add("wrong");
-    }
-
-  });
-
-}
-
-
 function submitQuiz() {
 
- /* 🔥 CHECK PREVIOUS RESULT */
-const savedResult = sessionStorage.getItem(
-  `${currentCategory}_quiz${currentQuiz}_result`
-);
-
-if (savedResult && !submitted) {
-
-  try {
-
-    const data = JSON.parse(savedResult);
-
-    const confirmResubmit = confirm(
-      `Iki kizami wari wabonye ${data.score}/${data.total} (${data.percentage}%).\n\nEse ushaka kongera kohereza?\n\nOK = Yego\nCancel = Oya`
-    );
-
-    if (!confirmResubmit) return;
-
-  } catch (e) {
-    console.warn("⚠️ Result parse error");
+  if (submitted) {
+    alert("Ikizami cyarangiye! Kanda OK ujye kuri SOHOKA UJYE KU KIZAMI.");
+    return;
   }
-}
+
+  submitted = true;
+
+  clearInterval(timer);
+
+  sessionStorage.setItem(
+    `${currentCategory}_quiz${currentQuiz}_submitted`,
+    "true"
+  );
 
   /* =========================
      HIDE SUBMIT BUTTON
@@ -3970,50 +3823,6 @@ if (savedResult && !submitted) {
 
     const total = correctAnswers.length;
     const percentage = Math.round((score / total) * 100);
-
-    /* 🔥 SAVE RESULT */
-const scoreData = {
-  score: score,
-  total: total,
-  percentage: percentage
-};
-
-sessionStorage.setItem(
-  `${currentCategory}_quiz${currentQuiz}_result`,
-  JSON.stringify(scoreData)
-);
-
-
-/* =========================
-   📈 SAVE PROGRESS HISTORY
-========================= */
-const historyKey = `${currentCategory}_quiz_history`;
-
-let history = [];
-
-try {
-  const existing = localStorage.getItem(historyKey);
-  if (existing) {
-    history = JSON.parse(existing);
-  }
-} catch (e) {
-  console.warn("⚠️ History parse error");
-}
-
-/* 🔥 NEW ENTRY */
-const entry = {
-  quiz: currentQuiz,
-  score: score,
-  total: total,
-  percentage: percentage,
-  date: new Date().toLocaleString()
-};
-
-/* 🔥 ADD TO HISTORY */
-history.push(entry);
-
-/* 🔥 SAVE BACK */
-localStorage.setItem(historyKey, JSON.stringify(history));
 
     /* =========================
        GET USER INFO
@@ -4128,36 +3937,6 @@ sessionStorage.removeItem(
 
   }, 5000);
 }
-
-
-function showQuizHistory(category) {
-
-  const historyKey = `${category}_quiz_history`;
-  const data = localStorage.getItem(historyKey);
-
-  if (!data) {
-    alert("Nta mateka y'amanota araboneka.");
-    return;
-  }
-
-  let history = [];
-
-  try {
-    history = JSON.parse(data);
-  } catch {
-    alert("Hari ikibazo mu mateka.");
-    return;
-  }
-
-  let text = "📊 AMATEKA Y'AMANOTA:\n\n";
-
-  history.forEach((h, i) => {
-    text += `${i + 1}. Ikizami ${h.quiz} → ${h.score}/${h.total} (${h.percentage}%)\n🕒 ${h.date}\n\n`;
-  });
-
-  alert(text);
-}
-
 
 function startQuiz(quizNumber) {
 
@@ -5066,8 +4845,24 @@ function checkQuizVersion() {
     location.reload();
   }
 }
-
 </script>
+
+
+<!-- Google Translate -->
+<script>
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement(
+    {
+      pageLanguage: "rw",
+      includedLanguages: "en,fr",
+      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+    },
+    "google_translate_element"
+  );
+}
+</script>
+
+<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
 </html>
